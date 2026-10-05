@@ -23,7 +23,15 @@ classdef TestMooring < matlab.unittest.TestCase
     methods(TestClassSetup)        
         function captureVisibility(testCase)
             testCase.OriginalDefault = get(0,'DefaultFigureVisible');
-        end        
+        end
+        function removeProjectFolder(~)
+            d = dir('**');
+            d = d([d.isdir]);
+            d = d(string({d.name})=="slprj");
+            for i = 1:length(d)
+                rmdir(fullfile(d(i).folder, d(i).name), 's')
+            end
+        end
         function runBemio(testCase)            
             cd(testCase.h5Dir);
             if isfile(testCase.h5Name)
@@ -49,8 +57,10 @@ classdef TestMooring < matlab.unittest.TestCase
         end
     end
     
-    methods(Test)        
+    methods(Test)    
         function testMoorDyn(testCase)
+            isCI = strcmpi(getenv("GITHUB_ACTIONS"), "true");
+            testCase.assumeFalse(isCI, "Skipping MoorDyn test on GitHub CI");
             assumeEqual(testCase,                           ...
                         exist("MoorDyn_caller", "file"), 2, ...
                         "MoorDyn is not installed");
