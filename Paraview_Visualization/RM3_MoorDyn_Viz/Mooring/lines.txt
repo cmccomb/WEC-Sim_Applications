@@ -2,7 +2,7 @@ Mooring line data file for MoorDyn in libmoordyn.dll
 ---------------------- LINE TYPES -----------------------------------------------------
 LineType  Diam      Mass/m        EA          BA/-zeta   EI         Cd     Ca    CdAx     CaAx    
 (-)       (m)       (kg/m)        (N)          (N-s/-)  (N-m^2)    (-)     (-)    (-)     (-) 
-Chain      0.144      126.0     583.376E6       -0.8      0        1.6     1.0    0.05     0.0
+Chain      0.144      126.0     583.376E6       -0.8      0        1.6     1.0    0.05    0.0
 ---------------------------- BODIES -----------------------------------------------------
 ID   Attachment  X0     Y0    Z0     r0      p0     y0     Mass  CG*   I*      Volume   CdA*   Ca
 (#)     (-)      (m)    (m)   (m)   (deg)   (deg)  (deg)   (kg)  (m)  (kg-m^2)  (m^3)   (m^2)  (-)

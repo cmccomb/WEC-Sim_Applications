@@ -29,18 +29,11 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         release: [R2024b]
         include: ${{ fromJSON(inputs.include) }}
-        exclude:
-          - os: ubuntu-latest
-            folder: Mooring
-          - os: ubuntu-latest
-            folder: OWC
-          - os: ubuntu-latest
-            folder: Paraview_Visualization
     name: "${{ matrix.folder }} - ${{ matrix.os }} - ${{ matrix.release }}"
     timeout-minutes: 45
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           lfs: true
           ref: ${{ inputs.head_ref }}
@@ -48,14 +41,14 @@ jobs:
       - name: Checkout LFS objects
         run: git lfs checkout
       - name: Check out WEC-Sim
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: WEC-Sim/WEC-Sim
           ref: ${{ inputs.base_ref }}
           path: './WEC-Sim'
       - name: Check out MoorDyn
         if: matrix.folder == 'Mooring' || matrix.folder == 'OWC' || matrix.folder == 'Paraview_Visualization'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: WEC-Sim/MoorDyn
           path: './MoorDyn'
@@ -66,8 +59,23 @@ jobs:
             ls ../WEC-Sim/source/functions/moorDyn
         shell: bash
         working-directory: './MoorDyn'
+      - name: Install MinGW for MATLAB accelerator
+        if: (matrix.folder == 'Mooring' || matrix.folder == 'Paraview_Visualization') && matrix.os == 'windows-latest'
+        uses: egor-tensin/setup-mingw@v3
+        with:
+          version: 8.1.0
+          platform: x64
+      - name: Expose MinGW to MATLAB
+        if: (matrix.folder == 'Mooring' || matrix.folder == 'Paraview_Visualization') && matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $gcc = (where.exe gcc.exe | Select-String "mingw64\\bin\\gcc.exe" | Select-Object -First 1).ToString()
+          $mingwBin = Split-Path $gcc -Parent
+          $mingwRoot = Split-Path $mingwBin -Parent
+          Write-Host "MW_MINGW64_LOC: $mingwRoot"
+          "MW_MINGW64_LOC=$mingwRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Install MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           products: ${{ matrix.products }}
           release: ${{ matrix.release }}
@@ -78,7 +86,7 @@ jobs:
           Xvfb :99 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
       - name: Install WEC-Sim, run tests and generate artifacts
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         with:
           command: |
             addpath(genpath('WEC-Sim/source'));

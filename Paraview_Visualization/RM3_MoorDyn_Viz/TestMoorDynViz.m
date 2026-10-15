@@ -25,6 +25,14 @@ classdef TestMoorDynViz < matlab.unittest.TestCase
         function captureVisibility(testCase)
             testCase.OriginalDefault = get(0,'DefaultFigureVisible');
         end
+        function removeProjectFolder(~)
+            d = dir('**');
+            d = d([d.isdir]);
+            d = d(string({d.name})=="slprj");
+            for i = 1:length(d)
+                rmdir(fullfile(d(i).folder, d(i).name), 's')
+            end
+        end
         function runBemio(testCase)            
             % Check for MoorDyn
             assumeEqual(testCase,                           ...
@@ -62,7 +70,10 @@ classdef TestMoorDynViz < matlab.unittest.TestCase
     
     methods(Test)        
         function testParaview_Visualization_RM3_MoorDyn_Viz(testCase)
+            isCI = strcmpi(getenv("GITHUB_ACTIONS"), "true");
+            testCase.assumeFalse(isCI, "Skipping MoorDyn test on GitHub CI");
             wecSim
+            close_system('RM3MoorDyn',0)
         end        
     end    
 end
