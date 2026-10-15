@@ -71,7 +71,81 @@ xlabel("Draft (m)")
 title("Added Mass at Infinity for the OC4 Varying Draft")
 
 %% Plot Radiation Damping
+w = draftMesh(1).w;
+B_11 = zeros(length(draftVals), length(w));
+B_33 = zeros(length(draftVals), length(w));
+B_55 = zeros(length(draftVals), length(w));
+for i = 1:length(draftVals)
+    B_11(i,:) = draftMesh(i).B_11;
+    B_33(i,:) = draftMesh(i).B_33;
+    B_55(i,:) = draftMesh(i).B_55;
+end
 
+[X,Y] = meshgrid(w, draftVals);
+figure()
+surf(X,Y,B_11)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{B}_{1,1} (\omega)$', 'Interpreter','latex')
+title("Normalized Radiation Damping in Surge vs Draft")
+
+figure()
+surf(X,Y,B_33)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{B}_{3,3} (\omega)$', 'Interpreter','latex')
+title("Normalized Radiation Damping in Heave vs Draft")
+
+figure()
+surf(X,Y,B_55)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{B}_{5,5} (\omega)$', 'Interpreter','latex')
+title("Normalized Radiation Damping in Pitch vs Draft")
+
+%% Plot Added Mass
+A_11 = zeros(length(draftVals), length(w));
+A_33 = zeros(length(draftVals), length(w));
+A_55 = zeros(length(draftVals), length(w));
+for i = 1:length(draftVals)
+    A_11(i,:) = draftMesh(i).A_11;
+    A_33(i,:) = draftMesh(i).A_33;
+    A_55(i,:) = draftMesh(i).A_55;
+end
+
+figure()
+surf(X,Y,A_11)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{A}_{1,1} (\omega)$', 'Interpreter','latex')
+title("Normalized Added Mass in Surge vs Draft")
+
+figure()
+surf(X,Y,A_33)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{A}_{3,3} (\omega)$', 'Interpreter','latex')
+title("Normalized Added Mass in Heave vs Draft")
+
+figure()
+surf(X,Y,A_55)
+ylabel("Draft (m)")
+xlabel("Frequency (rad/s)")
+zlabel('$\bar{A}_{5,5} (\omega)$', 'Interpreter','latex')
+title("Normalized Added Mass in Pitch vs Draft")
+
+%% Plot Displaced Volume
+disp_vol = zeros(length(draftVals),1);
+for i = 1:length(draftVals)
+    disp_vol(i) = draftMesh(i).disp_vol; 
+end
+
+
+figure()
+plot(draftVals, disp_vol)
+ylabel("Displaced Volume (m3)")
+xlabel("Draft (m)")
+title("Displaced Volume for the OC4 Varying Draft")
 
 %% Functions
 function mesh = loadDraftFile(draftName, h5file)
@@ -97,4 +171,13 @@ function mesh = loadDraftFile(draftName, h5file)
     mesh.B_11 = B(:,1,1)';
     mesh.B_33 = B(:,3,3)';
     mesh.B_55 = B(:,5,5)';
+
+    % Get the normalized A_w values for pitch
+    A = h5read(h5file,'/body1/hydro_coeffs/added_mass/all');
+    mesh.A_11 = A(:,1,1)';
+    mesh.A_33 = A(:,3,3)';
+    mesh.A_55 = A(:,5,5)';
+
+    % Get displaced volume
+    mesh.disp_vol = h5read(h5file,'/body1/properties/disp_vol');
 end

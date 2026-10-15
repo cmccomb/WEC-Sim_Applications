@@ -39,11 +39,20 @@ for i = 1:numDraftNames*numMeshNames
     hydro = readCAPYTAINE(hydro,'results.nc');
     hydro.draft = drafts(i);
     hydro.file = sprintf('depth_%.2f', abs(drafts(i)));
-    allHydro(i) = hydro;
-    
+    allHydro(i) = hydro;    
     % Return to main folder
     cd ..\
 end
+
+for i = 1:numDraftNames*numMeshNames
+    % Access the different folders
+    cd(folderNames(i))
+    allHydro(i).Vo = h5read("results.h5",'/body1/properties/disp_vol');
+    % Return to main folder
+    cd ..\
+end
+
+
 
 %% interpolate BEM data to greater directional fidelity
 nDrafts = length(drafts);
@@ -52,7 +61,7 @@ newDrafts = 18:0.05:22;
 newDrafts  = setdiff(newDrafts, drafts); % remove values repeated in drafts
 drafts(end+1:end+length(newDrafts)) = newDrafts;
 
-vars = {'A', 'Ainf', 'B', 'cg', 'cb',...
+vars = {'A', 'Ainf', 'B', 'cg', 'cb', 'Vo',...
     'ex_re', 'ex_im', ...
     'sc_re', 'sc_im', ...
     'fk_re', 'fk_im'}; % drafts dependent BEM variables
@@ -71,9 +80,12 @@ for i = nDrafts + 1 : length(drafts)
     allHydro(i).file = sprintf('depth_%.2f', abs(drafts(i)));
     allHydro(i).draft = drafts(i);
 
+    i
+
     % Interpolate all draft-dependent variables
     ddrafts = (drafts(i) - drafts(ind1)) / (drafts(ind2) - drafts(ind1));
     for iVar = 1:length(vars)
+        iVar
         allHydro(i).(vars{iVar}) = allHydro(ind1).(vars{iVar}) * (1-ddrafts) +...
                                    allHydro(ind2).(vars{iVar}) * ddrafts;
     end
@@ -102,8 +114,10 @@ for i = 1:length(hydro_sorted)
     hydro = radiationIRF(hydro_sorted(i),60,[],[],[],[]);
     hydro = excitationIRF(hydro,157,[],[],[],[]);
 
-    % Skip files that have already been written because writeBEMIOH5 is slow
-    if ~isfile([hydro.file '.h5'])
-        writeBEMIOH5(hydro);
-    end
+    % % Skip files that have already been written because writeBEMIOH5 is slow
+    % if ~isfile([hydro.file '.h5'])
+    %     writeBEMIOH5(hydro);
+    % end
+
+    writeBEMIOH5(hydro);
 end
